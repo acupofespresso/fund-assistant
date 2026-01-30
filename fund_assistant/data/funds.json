@@ -1,0 +1,124 @@
+{
+    "stock": [
+        {
+            "code": "110022",
+            "name": "易方达消费行业",
+            "fund_type": "stock",
+            "risk_level": "高风险",
+            "hot": true
+        },
+        {
+            "code": "161725",
+            "name": "招商中证白酒",
+            "fund_type": "stock",
+            "risk_level": "高风险",
+            "hot": true
+        },
+        {
+            "code": "005827",
+            "name": "易方达蓝筹精选",
+            "fund_type": "stock",
+            "risk_level": "中高风险",
+            "hot": true
+        },
+        {
+            "code": "110011",
+            "name": "易方达中小盘",
+            "fund_type": "stock",
+            "risk_level": "高风险",
+            "hot": false
+        },
+        {
+            "code": "001216",
+            "name": "易方达新收益A",
+            "fund_type": "stock",
+            "risk_level": "中高风险",
+            "hot": false
+        }
+    ],
+    "hybrid": [
+        {
+            "code": "163406",
+            "name": "兴全合润",
+            "fund_type": "hybrid",
+            "risk_level": "中高风险",
+            "hot": true
+        },
+        {
+            "code": "519772",
+            "name": "交银成长30",
+            "fund_type": "hybrid",
+            "risk_level": "中高风险",
+            "hot": false
+        },
+        {
+            "code": "001595",
+            "name": "天弘中证500",
+            "fund_type": "hybrid",
+            "risk_level": "中风险",
+            "hot": false
+        }
+    ],
+    "bond": [
+        {
+            "code": "110051",
+            "name": "易方达纯债债券A",
+            "fund_type": "bond",
+            "risk_level": "低风险",
+            "hot": false
+        },
+        {
+            "code": "000914",
+            "name": "中加纯债债券A",
+            "fund_type": "bond",
+            "risk_level": "低风险",
+            "hot": false
+        },
+        {
+            "code": "003376",
+            "name": "易方达安悦超短债A",
+            "fund_type": "bond",
+            "risk_level": "极低风险",
+            "hot": false
+        }
+    ],
+    "index": [
+        {
+            "code": "110026",
+            "name": "易方达创业板ETF联接",
+            "fund_type": "index",
+            "risk_level": "高风险",
+            "hot": true
+        },
+        {
+            "code": "000478",
+            "name": "建信中证500",
+            "fund_type": "index",
+            "risk_level": "中高风险",
+            "hot": false
+        },
+        {
+            "code": "001550",
+            "name": "天弘中证50AH优选",
+            "fund_type": "index",
+            "risk_level": "中风险",
+            "hot": false
+        }
+    ],
+    "money": [
+        {
+            "code": "000198",
+            "name": "天弘余额宝",
+            "fund_type": "money",
+            "risk_level": "极低风险",
+            "hot": true
+        },
+        {
+            "code": "000638",
+            "name": "富国富钱包",
+            "fund_type": "money",
+            "risk_level": "极低风险",
+            "hot": false
+        }
+    ]
+}
