@@ -5,7 +5,15 @@ from decimal import Decimal
 from pathlib import Path
 
 from fund_assistant.api import TianTianAPI
-from fund_assistant.models import FundBasic, FundPrice, FundType, HistoricalNav, RiskLevel
+from fund_assistant.models import (
+    FundBasic, 
+    FundPrice, 
+    FundType, 
+    HistoricalNav, 
+    RiskLevel,
+    FundDetail,
+    FundHolding
+)
 
 
 class FundService:
@@ -15,6 +23,30 @@ class FundService:
         """Initialize fund service."""
         self.api = TianTianAPI()
         self._load_fund_data()
+
+    def get_fund_detail(self, code: str) -> FundDetail | None:
+        """获取基金详细信息 / Get fund detail."""
+        return self.api.get_fund_detail(code)
+
+    def get_fund_holdings(self, code: str) -> FundHolding | None:
+        """获取基金持仓 / Get fund holdings."""
+        return self.api.get_fund_holdings(code)
+
+    def compare_funds(self, codes: list[str]) -> list[FundDetail]:
+        """对比基金 / Compare funds.
+        
+        Args:
+            codes: List of fund codes
+
+        Returns:
+            List of FundDetail objects
+        """
+        results = []
+        for code in codes:
+            detail = self.get_fund_detail(code)
+            if detail:
+                results.append(detail)
+        return results
 
     def _load_fund_data(self):
         """加载基金静态数据 / Load static fund data."""

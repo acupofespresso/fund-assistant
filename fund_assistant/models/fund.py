@@ -91,3 +91,31 @@ class FundHolding(BaseModel):
     stock_percentage: Decimal | None = Field(None, description="股票占比 %")
     bond_percentage: Decimal | None = Field(None, description="债券占比 %")
     cash_percentage: Decimal | None = Field(None, description="现金占比 %")
+
+
+class FundDetail(BaseModel):
+    """基金详细信息 / Fund Detail"""
+    
+    code: str
+    name: str
+    fund_type: str
+    
+    # 基本信息
+    establish_date: date | None = None
+    company: str | None = None
+    manager: str | None = None
+    fund_size: Decimal | None = Field(None, description="基金规模(元)")
+    
+    # 费率
+    management_fee: str | None = None # 费率可能带%
+    
+    # 评级/风险
+    risk_level: str | None = None
+    rating: str | None = None
+    
+    # 业绩表现 (Returns)
+    return_1m: Decimal | None = None
+    return_6m: Decimal | None = None
+    return_1y: Decimal | None = None
+    return_3y: Decimal | None = None
+    return_inception: Decimal | None = None

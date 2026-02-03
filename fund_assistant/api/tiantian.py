@@ -6,7 +6,13 @@ from datetime import datetime
 from decimal import Decimal
 
 from fund_assistant.api.base import BaseClient
-from fund_assistant.models import FundPrice, HistoricalNav
+from fund_assistant.models import (
+    FundPrice, 
+    HistoricalNav, 
+    FundDetail, 
+    FundHolding, 
+    HoldingStock
+)
 
 
 class TianTianAPI(BaseClient):
@@ -14,6 +20,116 @@ class TianTianAPI(BaseClient):
 
     ESTIMATE_URL = "http://fundgz.1234567.com.cn/js/{code}.js"
     HISTORY_URL = "https://fundf10.eastmoney.com/F10DataApi.aspx"
+    
+    # Mobile API endpoints
+    MOBILE_BASE_URL = "https://fundmobapi.eastmoney.com/FundMNewApi"
+    
+    def get_fund_detail(self, code: str) -> FundDetail | None:
+        """获取基金详细信息 / Get fund details."""
+        try:
+            url = f"{self.MOBILE_BASE_URL}/FundMNBasicInformation"
+            params = {
+                "FCODE": code,
+                "deviceid": "1",
+                "plat": "Iphone",
+                "product": "EFund",
+                "version": "11.0.0"
+            }
+            response = self.get(url, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            if not data.get("Success") or not data.get("Datas"):
+                return None
+                
+            info = data["Datas"]
+            
+            # Helper to parse decimal safely
+            def to_dec(val):
+                if val and val != "--":
+                    try:
+                        return Decimal(val)
+                    except:
+                        return None
+                return None
+
+            # Helper to parse date safely
+            def to_date(val):
+                if val and val != "--":
+                    try:
+                        return datetime.strptime(val, "%Y-%m-%d").date()
+                    except:
+                        return None
+                return None
+
+            return FundDetail(
+                code=info["FCODE"],
+                name=info["SHORTNAME"],
+                fund_type=info["FTYPE"],
+                establish_date=to_date(info.get("ESTABDATE")),
+                company=info.get("JJGS"),
+                manager=info.get("JJJL"),
+                fund_size=to_dec(info.get("ENDNAV")),
+                management_fee=info.get("RATE") or info.get("rate") or info.get("SOURCERATE"),
+                risk_level=info.get("RISKLEVEL"),
+                
+                return_1m=to_dec(info.get("SYL_Y")),
+                return_6m=to_dec(info.get("SYL_6Y")),
+                return_1y=to_dec(info.get("SYL_1N")),
+                return_3y=to_dec(info.get("SYL_3N")),
+                return_inception=to_dec(info.get("SYL_LN")),
+            )
+        except Exception as e:
+            print(f"Error fetching detail for {code}: {e}")
+            return None
+
+    def get_fund_holdings(self, code: str) -> FundHolding | None:
+        """获取基金持仓 / Get fund holdings."""
+        try:
+            url = f"{self.MOBILE_BASE_URL}/FundMNInverstPosition"
+            params = {
+                "FCODE": code,
+                "deviceid": "1",
+                "plat": "Iphone",
+                "product": "EFund",
+                "version": "11.0.0"
+            }
+            response = self.get(url, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            if not data.get("Success") or not data.get("Datas"):
+                return None
+            
+            datas = data["Datas"]
+            fund_stocks = datas.get("fundStocks", [])
+            expansion = data.get("Expansion") # Date like "2025-12-31"
+            
+            stocks = []
+            for s in fund_stocks:
+                # GPDM, GPJC, JZBL
+                stocks.append(HoldingStock(
+                    code=s["GPDM"],
+                    name=s["GPJC"],
+                    percentage=Decimal(s["JZBL"])
+                ))
+            
+            report_date = datetime.now().date()
+            if expansion:
+                 try:
+                    report_date = datetime.strptime(expansion, "%Y-%m-%d").date()
+                 except:
+                    pass
+
+            return FundHolding(
+                code=code,
+                name="Unknown", # API doesn't return fund name here easily, can be filled by caller
+                report_date=report_date,
+                top_stocks=stocks
+            )
+        except Exception as e:
+            print(f"Error fetching holdings for {code}: {e}")
+            return None
 
     def get_realtime_estimate(self, code: str) -> FundPrice | None:
         """获取实时估值 / Get real-time estimate.

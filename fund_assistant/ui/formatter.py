@@ -7,19 +7,138 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from fund_assistant.models import FundBasic, FundPrice, HistoricalNav
+from fund_assistant.models import (
+    FundBasic, 
+    FundPrice, 
+    HistoricalNav, 
+    FundDetail, 
+    FundHolding
+)
 
 
 class FundFormatter:
     """格式化终端输出 / Terminal Output Formatter"""
-
+    
     def __init__(self, console: Console | None = None):
-        """Initialize formatter.
-
-        Args:
-            console: Rich console instance
-        """
+        """Initialize formatter."""
         self.console = console or Console()
+
+    def display_fund_detail(self, detail: FundDetail):
+        """显示基金详细信息 / Display fund details."""
+        if not detail:
+            self.console.print("[red]❌ 无法获取基金详情 / Failed to fetch fund detail[/red]")
+            return
+
+        title = f"ℹ️ 基金详情 / Fund Details - {detail.name} ({detail.code})"
+        
+        content = []
+        
+        # Basic Info
+        content.append(f"[bold]基本信息 / Basic Info[/bold]")
+        content.append(f"  类型: {detail.fund_type}")
+        content.append(f"  成立日期: {detail.establish_date}")
+        content.append(f"  基金公司: {detail.company}")
+        content.append(f"  基金经理: {detail.manager}")
+        if detail.fund_size:
+            size_yi = detail.fund_size / Decimal(100000000)
+            content.append(f"  基金规模: {size_yi:.2f} 亿")
+        
+        # Fees & Risk
+        content.append(f"\n[bold]费率与风险 / Fees & Risk[/bold]")
+        content.append(f"  管理费率: {detail.management_fee}")
+        content.append(f"  风险等级: {detail.risk_level}")
+        
+        # Performance
+        content.append(f"\n[bold]阶段涨幅 / Performance[/bold]")
+        
+        def format_return(val):
+            if val is None: return "---"
+            color = "green" if val >= 0 else "red"
+            return f"[{color}]{val:+.2f}%[/{color}]"
+            
+        content.append(f"  近1月: {format_return(detail.return_1m)}")
+        content.append(f"  近6月: {format_return(detail.return_6m)}")
+        content.append(f"  近1年: {format_return(detail.return_1y)}")
+        content.append(f"  近3年: {format_return(detail.return_3y)}")
+        content.append(f"  成立来: {format_return(detail.return_inception)}")
+
+        panel = Panel("\n".join(content), title=title, border_style="blue")
+        self.console.print(panel)
+
+    def display_fund_holdings(self, holding: FundHolding):
+        """显示基金持仓 / Display fund holdings."""
+        if not holding:
+            self.console.print("[red]❌ 无法获取持仓信息 / Failed to fetch holdings[/red]")
+            return
+
+        title = f"📊 持仓分析 / Holdings Analysis - {holding.code}"
+        
+        table = Table(title=title, show_header=True, header_style="bold magenta")
+        table.add_column("股票代码\nCode", style="cyan", width=10)
+        table.add_column("名称\nName", style="white", width=20)
+        table.add_column("占比\n%", style="yellow", justify="right", width=10)
+
+        for stock in holding.top_stocks:
+            table.add_row(
+                stock.code,
+                stock.name,
+                f"{stock.percentage:.2f}%"
+            )
+            
+        self.console.print(table)
+        self.console.print(f"[dim]报告期: {holding.report_date}[/dim]")
+
+    def display_comparison(self, details: list[FundDetail]):
+        """显示基金对比 / Display fund comparison."""
+        if not details:
+            self.console.print("[yellow]无数据对比 / No data to compare[/yellow]")
+            return
+
+        table = Table(title="🆚 基金对比 / Fund Comparison", show_header=True, header_style="bold green")
+        
+        # Columns: Metric, Fund A, Fund B ...
+        table.add_column("指标\nMetric", style="white bold", width=15)
+        
+        for d in details:
+            table.add_column(f"{d.name}\n{d.code}", justify="center", width=20)
+            
+        # Rows
+        # Type
+        row = ["类型"] + [d.fund_type for d in details]
+        table.add_row(*row)
+        
+        # Size
+        def format_size(d):
+            if d.fund_size:
+                return f"{d.fund_size / Decimal(100000000):.2f} 亿"
+            return "---"
+        row = ["规模"] + [format_size(d) for d in details]
+        table.add_row(*row)
+        
+        # Manager
+        row = ["经理"] + [d.manager or "---" for d in details]
+        table.add_row(*row)
+
+        # Risk
+        row = ["风险"] + [str(d.risk_level) for d in details]
+        table.add_row(*row)
+
+        # Returns
+        def format_ret(val):
+            if val is None: return "---"
+            color = "green" if val >= 0 else "red"
+            return f"[{color}]{val:+.2f}%[/{color}]"
+
+        row = ["近1年"] + [format_ret(d.return_1y) for d in details]
+        table.add_row(*row)
+
+        row = ["近3年"] + [format_ret(d.return_3y) for d in details]
+        table.add_row(*row)
+        
+        row = ["成立来"] + [format_ret(d.return_inception) for d in details]
+        table.add_row(*row)
+
+        self.console.print(table)
 
     def display_fund_list(self, funds: list[FundBasic]):
         """显示基金列表 / Display fund list.

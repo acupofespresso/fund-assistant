@@ -1,5 +1,6 @@
 """CLI commands for fund assistant."""
 
+from typing import List
 from typing_extensions import Annotated
 
 import typer
@@ -18,6 +19,46 @@ app = typer.Typer(
 console = Console()
 fund_service = FundService()
 formatter = FundFormatter(console)
+
+
+@app.command()
+def info(code: Annotated[str, typer.Argument(help="基金代码 / Fund code")]):
+    """ℹ️ 基金详情 (规模/费率/业绩) / Fund Details"""
+    detail = fund_service.get_fund_detail(code)
+    formatter.display_fund_detail(detail)
+
+
+@app.command()
+def holding(code: Annotated[str, typer.Argument(help="基金代码 / Fund code")]):
+    """📊 持仓分析 (前十大重仓) / Holdings Analysis"""
+    holding = fund_service.get_fund_holdings(code)
+    formatter.display_fund_holdings(holding)
+
+
+@app.command()
+def compare(
+    codes: Annotated[List[str], typer.Argument(help="基金代码列表 (空格分隔) / Fund codes")]
+):
+    """🆚 基金对比 (2-4只) / Compare Funds"""
+    if len(codes) < 2:
+        console.print("[red]⚠️ 请至少输入2个基金代码进行对比 / Please input at least 2 fund codes[/red]")
+        raise typer.Exit(1)
+    
+    details = fund_service.compare_funds(codes)
+    formatter.display_comparison(details)
+
+
+@app.command()
+def manager(code: Annotated[str, typer.Argument(help="基金代码 / Fund code")]):
+    """🧑‍💼 基金经理 (姓名/公司) / Fund Manager"""
+    # Currently reusing basic detail to get manager name
+    detail = fund_service.get_fund_detail(code)
+    if detail:
+        console.print(f"🧑‍💼 基金经理: [bold cyan]{detail.manager}[/bold cyan]")
+        console.print(f"🏢 基金公司: {detail.company}")
+        console.print("[dim]更多经理数据接入中... / More manager data coming soon...[/dim]")
+    else:
+        console.print("[red]❌ 无法获取信息 / Failed to fetch info[/red]")
 
 
 @app.command()
